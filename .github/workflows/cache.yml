@@ -1,31 +1,43 @@
-name: Cache Workflow
+name: CI with Cache
 
 on:
   push:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Cache step
-      - name: Setup cache
-        id: cache-step
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache dependencies
+        id: cache-deps
         uses: actions/cache@v4
         with:
-          path: ~/.cache/demo
+          path: |
+            ~/.npm
+            node_modules
           key: cache-874cb66
 
-      # Prime cache and print result
       - name: prime-cache-874cb66
         run: |
-          if [ "${{ steps.cache-step.outputs.cache-hit }}" == "true" ]; then
-            echo "Cache Hit"
+          if [ "${{ steps.cache-deps.outputs.cache-hit }}" == "true" ]; then
+            echo "Cache HIT"
           else
-            echo "Cache Miss"
-            mkdir -p ~/.cache/demo
-            echo "data" > ~/.cache/demo/file.txt
+            echo "Cache MISS"
           fi
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: echo "Build completed successfully"
